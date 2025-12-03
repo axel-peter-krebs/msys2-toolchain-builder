@@ -14,6 +14,11 @@ param (
     [parameter(Position=4,Mandatory=$False)][String] $MINGW64_Packages_Dest
 )
 
+Write-Host "Using MSYS2 packages URL: $MSYS2_Packages_URL";
+Write-Host "Using MSYS2 packages destination: $MSYS2_Packages_Dest";
+Write-Host "Using MINGW64 packages URL: $MINGW64_Packages_URL";
+Write-Host "Using MINGW64 packages destination URL: $MINGW64_Packages_Dest";
+
 $load_facts = [pscustomobject]@{
     msys2_pkgs_git_repo_dir = $null
     msys2_pkgs_git_status = $null
@@ -86,13 +91,13 @@ Function MakePKG_MINGW() {
     Write-Host "Building package in $pgkbuild_cygpath.."
     try {
         Push-Location $pkgbuild_dir; # now, current path for bash is this location
-        
+        $Env:MINGW_ARCH = "mingw64"; # default!
         #iex "sh -c '. /etc/makepkg.conf'"; #| Write-Host
         #$print_srcinfo_cmd = "makepkg --printsrcinfo";
         #iex "sh -c '$print_srcinfo_cmd'";
         #$list_packages_cmd = "makepkg --packagelist";
         #iex "sh -c '$list_packages_cmd'";
-        $bash_cmd = "makepkg-mingw";
+        $bash_cmd = "makepkg-mingw --syncdeps --noconfirm --needed --install";
         iex "sh -c '$bash_cmd'";
         Pop-Location
     }

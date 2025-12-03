@@ -89,3 +89,43 @@ help
 which help
 clear
 which clear
+sdk help
+which sdk
+pwd
+pgp
+openssl
+gpk
+gpg --help
+ls -la
+cat git-for-windows.gpg 
+LC_ALLC pacman -V|sed -r 's#[0-9]+#e61#g'|md5sum|cur -c1-6
+LC_ALLC pacman -V|sed -r 's#[0-9]+#e61#g'|md5sum|cut -c1-6
+LC_ALL=C pacman -V|sed -r 's#[0-9]+#e61#g'|md5sum|cut -c1-6
+exit
+pwd
+cd ..
+pacman -Q > packages.txt
+cd /d/MINGW-packages/
+ls -la
+cd mingw-w64-aalib/
+ls -la
+ls -la pkg
+pwd
+cd /d/MINGW-packages/
+ls -la mingw-w64-x86_64-gedit
+ls -la mingw-w64-gedit
+makepkg --gelp
+makepkg --help
+makepkg -Cfs
+ls -la
+cd mingw-w64-gedit
+makepkg -Cfs
+pacman -Sc
+pacman -Suy
+makepkg -Cfs
+pacman -Syyuu
+makepkg -h
+makepkg -Cfs --skipchecksums
+ls -la
+pacman -U mingw-w64-x86_64-gedit-48.2-2-any.pkg.tar.zst 
+exit

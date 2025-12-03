@@ -5,6 +5,8 @@
 
   msys2-version: ">3.6.5"
 
+  description: "Install the 'git-bash.exe' in the MSYS2 environment."
+
   steps:
 
     - name: '#1'
@@ -30,7 +32,7 @@
     - name: '#2'
       description: "Update MSYS2 packages database (sync)."
       commands:
-        - "sh -c 'pacman -Suu --noconfirm'"
+        - "sh -c 'pacman -Syyuu --noconfirm'"
 
     - name: '#3'
       description: "Install new (git-bash) packages."
@@ -44,6 +46,7 @@
         - "mingw-w64-x86_64-git-extra"
         - "mingw-w64-x86_64-git-credential-manager"
       commands:
+        - "sh -c 'echo DONE.'"
 
     - name: '#4'
       description: "Start ssh-agent for user automatically when MSYS2 bash starts."

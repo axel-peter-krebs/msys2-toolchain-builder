@@ -1,7 +1,6 @@
 Motto: As good old Cygwin had a nice GUI.. I want one for MSYS{,}2!
 
-Goal: Build Linux toolchains (MINGW32, MINGW64, UCRT64, CLANG64/LLVM) for use on Windows.
-	Optionally, Install frontends for the LLVM, e.g. Rust.
+Goal: Build Linux toolchains (MINGW32, MINGW64, UCRT64, CLANG64/LLVM) for use on Windows. 
 
 Motivation: 
 
@@ -32,8 +31,16 @@ Installation steps:
 	  Note: Perl is pre-installed on the initial MSYS2 installation (whilst Python etc. is not; this will be done with PKGBUILD)
 	* Provide PS commands to build toolchain on the current system. 
 
-Samples: 
+Samples for 'cross-platform' GUI libraries: 
 
-* Build an application with cegui library and run tests.
-* Build a minmal Ruby gem and run specs.
+- CEGUI 
+- ELF (Enlightenment)
+- FLTK (Fast Light Toolkit) 
+- GTK (Gnome Toolkit)
+- IUP (https://www.tecgraf.puc-rio.br/iup/)
+- Qt5/6
+- TK (Tcl/Tk, Not TKinter)
+- 
+
+All UI libraries shall be tested for toolchain compatibility, s. folder 'recipes'. 
 

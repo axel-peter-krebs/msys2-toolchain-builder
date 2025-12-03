@@ -28,7 +28,7 @@ $settings = @{
     'msys2.mingw64.packages.master.url' = "https://github.com/msys2/MINGW-packages.git"; 
     'msys2.mingw64.hdl.url' = ""; # MINGW-w32
     'msys2.keyring.url' = "https://github.com/msys2/MSYS2-keyring.git";
-    'msys2.user.dir' =  'qafila'; # default user; s. folder 'qafila'
+    'msys2.user.dir' =  'qafila'; # default user; s. folder 'qafila';
 };
 
 Function print_settings() {
@@ -107,9 +107,33 @@ $module_load_facts = Get_Module_Load_Facts;
 
 Function Enter_Msys2_Shell() {
     param (
-        [parameter(Position=0,Mandatory=$True)][String] $msys2_arch
+        #[parameter(Position=0,Mandatory=$True)][String] $msys2_arch
     )
     Write-Host "A bash-like MSYS2 program will be opened through 'msys2_shell.cmd' located at the MSYS2 root installation.";
+    $m_system = "mingw64";
+    if ( $Env:MSYSTEM -eq $null ) {
+        $user_input = Read-Host -Prompt "The envionment variable MSYSTEM was not set! Pls. choose one of the following: 'clang64', 'clangarm64', 'mingw32', 'mingw64' (default), 'ucrt64'.";
+        if ( $user_input -eq "clang64" ) {
+            $m_system = "clang64";
+        }
+        elseif ( $user_input -eq "clangarm64") {
+            $m_system = "clangarm64";
+        }
+        elseif ( $user_input -eq "mingw32") {
+            $m_system = "mingw32";
+        }
+        elseif ( $user_input -eq "ucrt64") {
+            $m_system = "ucrt64";
+        }
+        else {
+            Write-Host "Either you have specified an unknown target platform, or pressed ENTER - The target platform will be $m_system."
+        }
+    }
+    else {
+        Write-Host "The target platform was specified by the environment variable MSYSTEM as $Env:MSYSTEM. I will use that (You can change it)!"
+        $m_system = $Env:MSYSTEM;
+    }
+
     $user_home = $Current_Script_loc; # if '$Env:HOME' is null, set default
     if ($Env:HOME -ne $null) {
         Write-Host "The environment used is set via Env:HOME to $Env:HOME."; # This is NOT the HOME path that bash will use!!!
@@ -119,7 +143,7 @@ Function Enter_Msys2_Shell() {
     $processOptions = @{
         FilePath = "$msys2_shell_cmd_path"
         #UseNewEnvironment = $true
-        ArgumentList = "-$msys2_arch -where $user_home" # "-conemu -mingw32"
+        ArgumentList = "-$m_system -where $user_home" # "-conemu -mingw32"
     }
     $proc = Start-Process @processOptions # -Wait -PassThru # -WorkingDirectory $user_home_dir 
 }
@@ -191,6 +215,7 @@ Function Start_Packing() {
 
     # Now, override default settings if user specified local GitHub path in 'msys2.properties'
     if ( $github_path_exists -eq $True) {
+        $github_path = Convert-Path $script:settings.'github.local.dir';
         $msys2_packages_master_src_dir = "$github_path\MSYS2-packages";
         $mingw64_packages_master_src_dir = "$github_path\MINGW-packages";
     }
@@ -212,7 +237,7 @@ Function Start_Packing() {
         - 'c2' for a MSYS2 [Cygwin] package build, 
         - 'w64' for MINGW-W64 package build, 
         - 'w32' for HDL packages (MINGW-w32), or 
-        - 'x' to exit this menu.`n";
+        - 'x' to exit this menu.`n>";
     if ( $pkg_kind -eq 'c2' ) {
         $pkg = Read-Host -Prompt "Pls. type the name of the package (subdirectory in the GIT repository)`n";
         $res = MakePKG_MSYS2($pkg);
@@ -267,7 +292,7 @@ Function Loop_Menu() {
                 $prompt += "`tType 'Y' to run an advanced YAML installer recipe (Perl).`n";
             }
         }
-        $prompt += "`tType 'X' to exit this menu.`n";
+        $prompt += "`tType 'X' to exit this menu; Note: MSYS2-ROOT/usr/bin is still on path! Programs like 'pacman' etc. are still available!!`n>";
         $activity = Read-Host -Prompt $prompt;
         switch ($activity) {
             A {
@@ -275,7 +300,7 @@ Function Loop_Menu() {
                 #$exitWhile = $True;
             }
             B {
-                Enter_Msys2_Shell "mingw64";
+                Enter_Msys2_Shell; # "mingw64";
                 #$exitWhile = $True;
             }
             E {

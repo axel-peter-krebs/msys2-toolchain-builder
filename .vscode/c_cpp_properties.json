@@ -1,0 +1,17 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "compilerPath": "D:\\GitHub_AxelPeterKrebs\\msys2-toolchain-guisamples\\msys64\\ucrt64\\bin\\g++"
+        }
+    ],
+    "version": 4
+}

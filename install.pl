@@ -61,13 +61,16 @@ else {
     for my $key ( keys %yamlHash ) {
         my $val = $yamlHash{"$key"};
         if( $key eq 'version' ) {
-            $version = $key;
+            print "Key is 'version', value: $val.";
+            $version = $val;
         }
         elsif ( $key eq 'msys2-version') {
-            $msys2_version = $key;
+            print "Key is 'msys2-version', value: $val.";
+            $msys2_version = $val;
         }
         elsif ( $key eq 'platform' ) {
-            $arch = $key;
+            print "Key is 'platform', value: $val.";
+            $arch = $val;
         }
         elsif ( $key eq 'steps') {
             foreach my $step_hash ( @{ $val } ) { # 'val' must be an array, 'step' is a hash
