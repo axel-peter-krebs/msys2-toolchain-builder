@@ -61,15 +61,15 @@ else {
     for my $key ( keys %yamlHash ) {
         my $val = $yamlHash{"$key"};
         if( $key eq 'version' ) {
-            print "Key is 'version', value: $val.";
+            #print "Key is 'version', value: $val.";
             $version = $val;
         }
         elsif ( $key eq 'msys2-version') {
-            print "Key is 'msys2-version', value: $val.";
+            #print "Key is 'msys2-version', value: $val.";
             $msys2_version = $val;
         }
-        elsif ( $key eq 'platform' ) {
-            print "Key is 'platform', value: $val.";
+        elsif ( $key eq 'arch' ) {
+            #print "Key is 'arch', value: $val.";
             $arch = $val;
         }
         elsif ( $key eq 'steps') {
@@ -146,6 +146,7 @@ sub print_steps() {
 
 sub execute_all() {
     foreach my $todo (@steps) {
+        print "#! Executing step $todo!\n";
         my $files_list = $todo->files;
         foreach my $file_ops_hash ( @{ $files_list }) {
             my $result = &file_op($file_ops_hash);

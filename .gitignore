@@ -2,12 +2,15 @@
 downloads/
 # Do not submit unpacked/checked-out sources
 sources/
-# Do not submit GitHub checkouts
-MINGW-packages/
-MSYS2-keyring
-MSYS2-packages/
+
+# Do not submit GitHub checkouts!
+
 # Do not submit the installed MSYS2 runtime
 msys*/
+
+# The scratch folder is private
+scratch/
+
 # Do not publish the IDE & link!
 vscode*
 # Do not submit probes!

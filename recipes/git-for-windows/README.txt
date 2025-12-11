@@ -1,6 +1,13 @@
-Taken from https://gitforwindows.org/install-inside-msys2-proper.html
+The source of this script is taken from the website https://gitforwindows.org/install-inside-msys2-proper.html
 
-Git for Windows being based on MSYS2, it's possible to install the mingw-w64-git package into an existing MSYS2 installation. That means that if you are already using MSYS2 on your computer, you can use Git for Windows without running the full installer or using the portable version. There are some caveats for going this way, details below. Reading the whole guide before starting is recommended.
+NOTE: The script is not running smoothly on a new MSYS2 installation. This comes from the fact, that in a first step a system upgrade is executed
+    which, however, downgrades the Perl runner, through which this script is run! It's a chicken-egg-problem and can only be solved through 
+    running the script again three times. The error message in the second run is:
+    "perl 1955 dofork: child -1 - forked process 4112 died unexpectedly, retry 0, exit code 0xC0000142, errno 11"
+
+Text from the source website:
+
+"Git for Windows being based on MSYS2, it's possible to install the mingw-w64-git package into an existing MSYS2 installation. That means that if you are already using MSYS2 on your computer, you can use Git for Windows without running the full installer or using the portable version. There are some caveats for going this way, details below. Reading the whole guide before starting is recommended.
 
 This guide assumes you are comfortable using the command line and you are willing to completely re-install your MSYS2 if something goes wrong. You can contact @Elieux for advice in the git-for-windows/git Gitter room or through the contact channels for MSYS2. Please don�t file issues with Git for Windows installed this way until you verify them in an official Git for Windows distribution.
 
@@ -72,4 +79,4 @@ deletes, modifies and replaces some files in /mingw??/bin/ and /mingw??/libexec/
 changes the terminal window title, changes the shell prompt
 enables a GUI SSH password prompt
 automatically wraps some interactive non-msys programs using winpty: Node, Python, PHP, PostgreSQL
-adds support for ARM64
+adds support for ARM64"

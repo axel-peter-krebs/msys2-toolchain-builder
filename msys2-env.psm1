@@ -189,7 +189,7 @@ if($script:load_facts.'msys2_install_dir' -ne $null) {
 
     Function Msys_System_Upgrade() {
         try {
-             Write-Host "Updating packages with '$pacmanSystemUpdate'";
+             Write-Host "Updating system with command '$pacmanSystemUpdate'";
              iex $pacmanSystemUpdate;
         }
         catch {

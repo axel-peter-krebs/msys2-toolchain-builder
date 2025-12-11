@@ -3,8 +3,7 @@
 # as well as MINGW packages from source (with 'makepkg').
 # Besides, it requires the MSYS2 to be installed and set in PATH environment variable:
 # it uses 'sh' to execute commands bcs. it cannot be assumed that a Windows executable
-# exists for Unix command (like 'makepkg' for example). Cmp. 'Run_Install_Script' in 
-# 'msys2-insta.ps1'!
+# exists for a required Unix command like 'makepkg', for example. 
 param (
     #[parameter(Position=0,Mandatory=$True)][String] $MSYS2_Path, set in Env:MSYS2_HOME
     #[parameter(Position=1,Mandatory=$False)][String] $MSYS2_User_Home, not needed
@@ -14,10 +13,10 @@ param (
     [parameter(Position=4,Mandatory=$False)][String] $MINGW64_Packages_Dest
 )
 
-Write-Host "Using MSYS2 packages URL: $MSYS2_Packages_URL";
-Write-Host "Using MSYS2 packages destination: $MSYS2_Packages_Dest";
-Write-Host "Using MINGW64 packages URL: $MINGW64_Packages_URL";
-Write-Host "Using MINGW64 packages destination URL: $MINGW64_Packages_Dest";
+#Write-Host "Using MSYS2 packages URL: $MSYS2_Packages_URL";
+#Write-Host "Using MSYS2 packages destination: $MSYS2_Packages_Dest";
+#Write-Host "Using MINGW64 packages URL: $MINGW64_Packages_URL";
+#Write-Host "Using MINGW64 packages destination URL: $MINGW64_Packages_Dest";
 
 $load_facts = [pscustomobject]@{
     msys2_pkgs_git_repo_dir = $null
@@ -45,10 +44,38 @@ $msys2_package_repo_exists = Test-Path $($MSYS2_Packages_Dest);
 if($msys2_package_repo_exists) {
     $script:load_facts.'msys2_pkgs_git_repo_dir' = $MSYS2_Packages_Dest;
 }
+else {
+    $script:load_facts.'debug_messages' += "No MSYS2 (Cygwin) package repository found in folder $MSYS2_Packages_Dest!";
+}
 
 $mingw64_package_repo_exists = Test-Path $($MINGW64_Packages_Dest);
 if($mingw64_package_repo_exists) {
     $script:load_facts.'mingw64_pkgs_git_repo_dir' = $MINGW64_Packages_Dest;
+}
+else {
+    $script:load_facts.'debug_messages' += "No MINGW-W64 package repository found in folder $MINGW64_Packages_Dest!";
+}
+
+Function Receive_PGP_Keys() {
+    <#
+    #!/bin/bash
+
+    . PKGBUILD
+
+    set -e
+
+    _keyserver=(
+        "keyserver.ubuntu.com"
+        "keys.gnupg.net"
+        "pgp.mit.edu"
+        "keys.openpgp.org"
+    )
+    for key in "${validpgpkeys[@]}"; do
+        for server in "${_keyserver[@]}"; do
+            timeout 20 /usr/bin/gpg --keyserver "${server}" --recv "${key}" && break || true
+        done
+    done
+    #>
 }
 
 Function MakePKG_MSYS2() {
@@ -58,8 +85,8 @@ Function MakePKG_MSYS2() {
     $msys2_packages_dir = $script:load_facts.'msys2_pkgs_git_repo_dir';
     $pkgbuild_dir = "$msys2_packages_dir\$pkg_name";
     $pgkbuild_cygpath = cygpath -u $pkgbuild_dir;
-    Write-Host "Building package in $pgkbuild_cygpath.."
-    $result = "INCOMPLETE";
+    Write-Host "Building package in $pgkbuild_cygpath..";
+    $result = "NONE";
     try {
         Push-Location $pkgbuild_dir; # now, current path for bash is this location
         #iex "sh -c '. /etc/makepkg.conf'"; #| Write-Host
@@ -67,7 +94,7 @@ Function MakePKG_MSYS2() {
         #iex "sh -c '$print_srcinfo_cmd'";
         #$bash_cmd = "makepkg --packagelist";
         #$bash_cmd = "makepkg --check $pkg"; no key verification! (TODO)
-        $bash_cmd = "makepkg";
+        $bash_cmd = "makepkg --syncdeps --noconfirm --needed --install";
         $result = iex "sh -c '$bash_cmd' 2>&1"; # This will source the bash scripts, e.g. set environments etc.
         Pop-Location
     }
@@ -77,6 +104,7 @@ Function MakePKG_MSYS2() {
     }
     return $result;
 }
+
 Export-ModuleMember 'MakePKG_MSYS2'; 
 
 # Now, for running 'makepkg', we need a bash-like environment.. 
@@ -89,6 +117,7 @@ Function MakePKG_MINGW() {
     $pkgbuild_dir = "$mingw64_packages_dir\$mingw_w64_package_name";
     $pgkbuild_cygpath = cygpath -u $pkgbuild_dir;
     Write-Host "Building package in $pgkbuild_cygpath.."
+    $result = "NONE";
     try {
         Push-Location $pkgbuild_dir; # now, current path for bash is this location
         $Env:MINGW_ARCH = "mingw64"; # default!
@@ -98,13 +127,13 @@ Function MakePKG_MINGW() {
         #$list_packages_cmd = "makepkg --packagelist";
         #iex "sh -c '$list_packages_cmd'";
         $bash_cmd = "makepkg-mingw --syncdeps --noconfirm --needed --install";
-        iex "sh -c '$bash_cmd'";
+        $result = iex "sh -c '$bash_cmd' 2>&1";
         Pop-Location
     }
     catch {
         Write-Host "Problem installing $pkg!";
     }
-    return "OK";
+    return $result;
 }
 
 Export-ModuleMember 'MakePKG_MINGW'; 
