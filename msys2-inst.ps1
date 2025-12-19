@@ -7,6 +7,10 @@ param(
 
 $Current_Script_loc = $PSScriptRoot;
 
+Set-location $Current_Script_loc; # necessary to find configuration files
+
+$admin_mode = $False;
+
 Function __log_if_debug([string] $debug_message) {
     if ($show_debug_information -eq $true) {
         Write-Host $debug_message
@@ -14,22 +18,22 @@ Function __log_if_debug([string] $debug_message) {
 }
 
 Function __reload_script() {
-    . "$Current_Script_loc\msys2-inst.ps1"; # reload the whole script
+    . msys2-inst.ps1; # reload the whole script
 }
 
 # Assume sensible defaults for MSYS2 location, MSYS2 user, download location, source location a.s.o.
 $settings = @{
     'sync.on.start' = "True";
-    'downloads.dir' = "$Current_Script_loc\downloads"; # default location for downloads
-    'msys2.install.dir' = "$Current_Script_loc\msys64"; # default, can be overridden in msys2.properties file
+    'downloads.dir' = "downloads"; # default location for downloads
+    'msys2.install.dir' = "msys2"; # default, can be overridden in msys2.properties file
     'github.local.dir' = "C:\GitHub"; # default, can be overridden
     'msys2.download.url' = "https://repo.msys2.org/distrib/x86_64/msys2-x86_64-20250830.exe"; # default, can be overridden
     'msys2.packages.master.url' = "https://github.com/msys2/MSYS2-packages.git"; 
     'msys2.mingw64.packages.master.url' = "https://github.com/msys2/MINGW-packages.git"; 
     'msys2.mingw64.hdl.url' = ""; # MINGW-w32
-    'msys2.keyring.url' = "https://github.com/msys2/MSYS2-keyring.git";
-    'msys2.user.dir' =  '/home/qafila'; # default user; s. folder 'qafila';
-    'msys2.msystem' =  'mingw64'; # default; 
+    'msys2.keyring.master.url' = "https://github.com/msys2/MSYS2-keyring.git";
+    'msys2.user' =  ""; # to be set or left to environment
+    'msys2.msystem' =  'mingw32'; # default (Windows 32-bit); 
 };
 
 Function print_settings() {
@@ -39,7 +43,7 @@ Function print_settings() {
 }
 
 # Read the 'msys2.properties' file and override defaults if required.
-$settingsFile = Convert-Path "$Current_Script_loc\msys2.properties"
+$settingsFile = Convert-Path "msys2.properties"
 Import-Csv $settingsFile -Delimiter "=" -Header Key,Value | ForEach-Object { 
     $key = $_[0].Key #| Write-Host
     $val = $_[0].Value #| Write-Host
@@ -58,6 +62,9 @@ Import-Csv $settingsFile -Delimiter "=" -Header Key,Value | ForEach-Object {
     elseif($key -eq 'msys2.download.url') {
         $overridden = $True;
     }
+    elseif($key -eq 'msys2.keyring.master.url') {
+        $overridden = $ $True;
+    }
     elseif($key -eq 'msys2.packages.master.url') {
         $overridden = $True;
     }
@@ -67,16 +74,16 @@ Import-Csv $settingsFile -Delimiter "=" -Header Key,Value | ForEach-Object {
     elseif($key -eq 'msys2.mingw64.hdl.url') {
         $overridden = $True;
     }
-    elseif ( $key -eq 'msys2.keyring.url') {
-        $overridden = $True;
-    }
-    elseif($key -eq 'msys2.user.dir') {
+    elseif($key -eq 'msys2.user') {
         $overridden = $True;
     }
     elseif($key -eq 'github.local.dir') {
         $overridden = $True;
     }
     elseif($key -eq 'sync.on.start') {
+        $overridden = $True;
+    }
+    elseif($key -eq 'msys2.msystem') {
         $overridden = $True;
     }
     else {
@@ -93,12 +100,16 @@ if ($show_debug_information) {
     print_settings
 }
 
+# The HOME environment variable is needed for bash et al. 
+$user_home_dir = $Env:USERPROFILE; # This is default system setting but may be overridden 
+
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 # Set the path to the MSYS2 executables (GNU programs)
-Write-Host "Loading MSYS2 installer (this may take some time while synchronizing the database).."
+Write-Host "Loading MSYS2 installer.."
 $sync_on_start = $False; # introduced this for lazy upgrade
 if ( $script:settings.'sync.on.start' -eq "True") {
+    Write-Host "MSYS2 will be updated automatically - You can prevent this by specifying 'sync.on.start=False' in 'mys2.properties'!";
     $sync_on_start = $True;
 }
 Import-Module "$Current_Script_loc\msys2-env.psm1" -ArgumentList @(
@@ -113,36 +124,22 @@ Function Enter_Msys2_Shell() {
     param (
         #[parameter(Position=0,Mandatory=$True)][String] $msys2_arch
     )
-    Write-Host "A bash-like MSYS2 program will be opened through 'msys2_shell.cmd' located at the MSYS2 root installation.";
-    $m_system = "mingw64";
+    Write-Host "A bash-like MSYS2 program will be opened through 'msys2_shell.cmd' located at the MSYS2 root installation..";
+    $m_system = $script:settings.'msys2.msystem';
     if ( $Env:MSYSTEM -eq $null ) {
-        $user_input = Read-Host -Prompt "The envionment variable MSYSTEM was not set! Pls. choose one of the following: 'clang64', 'clangarm64', 'mingw32', 'mingw64' (default), 'ucrt64'.";
-        if ( $user_input -eq "clang64" ) {
-            $m_system = "clang64";
-        }
-        elseif ( $user_input -eq "clangarm64") {
-            $m_system = "clangarm64";
-        }
-        elseif ( $user_input -eq "mingw32") {
-            $m_system = "mingw32";
-        }
-        elseif ( $user_input -eq "ucrt64") {
-            $m_system = "ucrt64";
-        }
-        else {
-            Write-Host "Either you have specified an unknown target platform, or pressed ENTER - The target platform will be $m_system."
-        }
+        Write-Host "The envionment variable MSYSTEM was not set; I will use the value for 'msys2.msystem' in 'msys2.properties', which is set to '$m_system'";
     }
     else {
-        Write-Host "The target platform was specified by the environment variable MSYSTEM as '$Env:MSYSTEM' - I will use that; however, you can overwrite it by specifying the 'msys2.msystem' property in 'msys2.properties'!"
+        Write-Host "The target platform was specified by the environment variable MSYSTEM as '$Env:MSYSTEM' - I will use that!"
         $m_system = $Env:MSYSTEM;
     }
-
+    Write-Host "The value of the HOME variable is set to $Env:HOME";
     $msys2_shell_cmd_path = $script:settings.'msys2.install.dir' + "\msys2_shell.cmd";
     $processOptions = @{
         FilePath = "$msys2_shell_cmd_path"
         #UseNewEnvironment = $true
-        ArgumentList = "-$m_system" #"" -where ??? -conemu -mingw32"
+        ArgumentList = "-$m_system" # -here -where '$Env:HOME' -use-full-path -mingw64 -conemu -no-start -defterm -shell bash
+        WorkingDirectory = $user_home_dir # set prior
         Verb = "RunAs" # we need adminstrative rights, e.g. to install in protected directories
     }
     $proc = Start-Process @processOptions # -Wait -PassThru # -WorkingDirectory $user_home_dir 
@@ -163,7 +160,7 @@ $perl_install_script_loc = "$Current_Script_loc\install.pl"
 Function Run_Install_Script() {
     $file_exists = $False;
     while ( $file_exists -ne $True ) {
-        $recipe = Read-Host -Prompt "`nPls. tell me which recipe to run (path to 'recipe.yml' file), or type 'x' to exit: _";
+        $recipe = Read-Host -Prompt "`nPls. tell me which recipe to run (path to 'recipe.yml' file), or type 'x' to exit: >";
         if($recipe -eq 'x') {
             $file_exists = $True; # hack
         }
@@ -196,17 +193,18 @@ Function Run_Install_Script() {
 # Cmp. https://packages.msys2.org/packages/base-devel?variant=x86_64
 # S. also https://wiki.archlinux.org/title/Makepkg
 $required_packages_for_packing = @(
+    "autotools", 
     "base-devel",
-    "perl-File-Next",
-    "gcc",
-    "autotools",
     "cmake", # MSYS2 (Cygwin) package!
+    "cygutils",
+    "gcc",
     "git",
-    "rsync",
     "help2man"
+    "perl-File-Next",
+    "rsync"
 );
 
-$missing_packer_dependencies = @();
+$missing_packer_dependencies = @(); # will be checked later..
 
 # When MSYS2 installation is found valid (synched and clean), the user may choose 
 # to enter the 'packing' environment, s. while loop below
@@ -214,60 +212,66 @@ Function Start_Packing() {
 
     Write-Host "Inspecting package-build environment .."
 
-    # Package building reqires downloading and verifying GPG signatures (SHA256) of the 
-    # downloads; thus, if the downloaded source cannot be verified, the build will stop!
-    Write-Host "The value of the environment variable HOME is '$Env:HOME'."
-
     # next step is to enable build environment for MSYS2 packages; if a valid local GitHub path 
     # is provided, use this one; otherwise use current path (default).
+    $msys2_keyring_master_src_dir = "$Current_Script_loc\MSYS2-keyring";
     $msys2_packages_master_src_dir = "$Current_Script_loc\MSYS2-packages";
     $mingw64_packages_master_src_dir = "$Current_Script_loc\MINGW-packages";
-    $github_path_exists = Test-Path $script:settings.'github.local.dir';
 
-    $msys2_packages_master_src_dir = "$Current_Script_loc\MSYS2-packages";
-    $mingw64_packages_master_src_dir = "$Current_Script_loc\MINGW-packages";
+    $github_path_exists = Test-Path $script:settings.'github.local.dir';
     # Now, override default settings only if user specified local GitHub path in 'msys2.properties'
     if ( $github_path_exists -eq $True) {
-        Write-Host "A path to the package sources was specified in the 'msys2.properties' file!";
         $github_path = Convert-Path $script:settings.'github.local.dir';
+        Write-Host "The following path to the package sources was specified in the 'msys2.properties' file: $github_path";
+        $msys2_keyring_master_src_dir = "$github_path\MSYS2-keyring";
         $msys2_packages_master_src_dir = "$github_path\MSYS2-packages";
         $mingw64_packages_master_src_dir = "$github_path\MINGW-packages";
-        Write-Host "I will use the follwing path to MINGW-packages: $mingw64_packages_master_src_dir.";
+    }
+    else {
+        Write-Host "A custom path to MSYS2-packages/MINGW-packages was not provided; assume default location (script path)";
     }
 
     Import-Module "$Current_Script_loc\msys2-pack.psm1" -ArgumentList @(
         $script:settings.'msys2.packages.master.url',
         $msys2_packages_master_src_dir,
         $script:settings.'msys2.mingw64.packages.master.url',
-        $mingw64_packages_master_src_dir
+        $mingw64_packages_master_src_dir,
+        $script:settings.'msys2.keyring.master.url',
+        $msys2_keyring_master_src_dir
     )
 
     $packer_load_facts = Get_Packer_Load_Facts;
+    $msys2_keyring_dir = $packer_load_facts.'msys2_keyring_git_repo_dir';
+    __log_if_debug "`tThe MSYS2 git repository for MSYS2 keyring is in $msys2_keyring_dir.";
     $msys2_packages_dir = $packer_load_facts.'msys2_pkgs_git_repo_dir';
+    __log_if_debug "`tThe MSYS2 git repository for packages is in $msys2_packages_dir.";
     $mingw_packages_dir = $packer_load_facts.'mingw64_pkgs_git_repo_dir';
-    __log_if_debug "The MSYS2 git repository for packages is in $msys2_packages_dir.";
-    __log_if_debug "The MINGW-W64 git repository for packages is in $mingw_packages_dir.";
+    __log_if_debug "`tThe MINGW-W64 git repository for packages is in $mingw_packages_dir.";
 
     $pkg_kind = Read-Host -Prompt "What kind of package do you want to build? Type
-        - 'c2' for a MSYS2 [Cygwin] package build, 
+        - 'c2' for a MSYS2 package build, 
         - 'w64' for MINGW-W64 package build, 
-        - 'w32' for HDL packages (MINGW-w32), or 
-        - 'x' to exit this menu.`n>";
+        - 'w32' for HDL packages (MINGW-w32), 
+        - 'keys' to install the MINGW-keyring to the local MSYS installation, or
+        - 'x' to exit this menu.`n>>";
     if ( $pkg_kind -eq 'c2' ) {
-        $pkg = Read-Host -Prompt "Pls. type the name of the package (subdirectory in the GIT repository)`n";
+        $pkg = Read-Host -Prompt "Pls. type the name of the package (subdirectory in the GIT repository)`n>>";
         $res = MakePKG_MSYS2($pkg);
         Write-Host "->makepkg returned $res.";
     }
     elseif ($pkg_kind -eq 'w64') {
-        $pkg = Read-Host -Prompt "Pls. type the name of the package (subdirectory in the GIT repository)`n";
+        $pkg = Read-Host -Prompt "Pls. type the name of the package (subdirectory in the GIT repository)`n>>";
         $res = MakePKG_MINGW($pkg);
         Write-Host "->makepkg returned $res.";
+    }
+    elseif ($pkg_kind -eq 'keys') {
+            Write-Host "TODO!";
     }
     elseif ( $pkg_kind -eq 'x') {
         Write-Host "Exiting packaging.."
     }
     else {
-        Write-Host "Could not understand your input: $pkg_kind. Exit."
+        Write-Host "Could not understand your input: $pkg_kind. Exiting.."
     }
     #Make_MINGW_Package($pkg);
     return "OK";
@@ -297,7 +301,7 @@ Function Loop_Menu() {
         $prompt += "`tType 'A' to get info about this MSYS2 installation.`n";
         $prompt += "`tType 'B' to bash into the MSYS2 installation with a predefined user account.`n";
         if ( $clean_start_required ) {
-            $prompt += "`tType 'E' to reload the MSYS2 library in a clean way (and unlock DB if necessary).`n";
+            $prompt += "`tType 'C' to reload the MSYS2 library in a clean way (and unlock DB if necessary).`n";
         }
         else {
             if ( $packages_missing ) {
@@ -319,7 +323,7 @@ Function Loop_Menu() {
                 Enter_Msys2_Shell; # "mingw64";
                 #$exitWhile = $True;
             }
-            E {
+            C {
                 Msys_Sync_Packages;
                 Write-Host "MSYS2 has been reloaded (sync'd)..";
                 $exitWhile = $True;
@@ -357,6 +361,31 @@ Function Loop_Menu() {
 
 if($module_load_facts.'msys2_clean' -eq $True) {
     Write-Host "Local MSYS2 installation was properly initialized.";
+    $msys2_install_dir = $module_load_facts.'msys2_install_dir';
+
+    if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+        Write-Host "You're running the PS script as non-administrator; if you want to use 'makepkg', you must run it as Administrator, however.";
+    }
+    else {
+        $script:admin_mode = $True;
+    }
+
+    # Setting new HOME if desired.. must be unter /home in MSYS2 installation
+    if ($script:settings.'msys2.user' -ne "") { # user settings 
+            $msys2_user = $script:settings.'msys2.user';
+            $script:user_home_dir = "$msys2_install_dir\home\$msys2_user";
+            $user_home_path = Convert-Path $user_home_dir; # throws error if not existant!
+            $Env:HOME = $user_home_path; # used for opening a bash env
+            #$Env:HOMEPATH = $user_home_path;
+            #$Env:USERNAME = $msys2_user;
+            #$Env:USERPROFILE = $user_home_path;
+            # set-variable -name HOME -value "$user_home_path" -Option ReadOnly;
+            Write-Host "A path to the users HOME was set to $user_home_dir";
+    }
+    else {
+        Write-Host "A path to the users HOME was not set in the 'msys2.properties' file - Will use the systems settings.";
+        # Now, we cannot set the HOME variabel to MSYS2/home, bcs. we don't know wheter MSYS2 was initiailized, yet..
+    }
 
     # Check whether the installation contains the required Perl modules for YAML installer
     $installed_packages = $module_load_facts.'msys2_packages';
@@ -365,7 +394,7 @@ if($module_load_facts.'msys2_clean' -eq $True) {
     Write-Host "Checking if requirements for YAML installation are met..";
     foreach ($pkg in $script:required_packages_for_running_installer) {
         if ($pkg -in $installed_packages.Keys) {
-            Write-Host "`tRequired package '$pkg' already installed.";
+             __log_if_debug "`tRequired package '$pkg' is already installed.";
         }
         else {
             $script:missing_yaml_packages += $pkg;
@@ -374,14 +403,14 @@ if($module_load_facts.'msys2_clean' -eq $True) {
     if ( $missing_yaml_packages.count -gt 0 ) {
         Write-Host "Some packages for running the YAML installer are missing!";
         foreach ($pkg in $missing_yaml_packages) {
-            Write-Host "`tPackage $pkg not found."
+             __log_if_debug "`tPackage $pkg not found."
         }
     }
     
     Write-Host "Checking if requirements for building MSYS2 packages are met..";
     foreach ($pkg in $script:required_packages_for_packing) {
         if ($pkg -in $installed_packages.Keys) {
-            Write-Host "`tRequired package '$pkg' already installed.";
+             __log_if_debug "`tRequired package '$pkg' already installed.";
         }
         else {
             $script:missing_packer_dependencies += $pkg;
@@ -393,17 +422,6 @@ if($module_load_facts.'msys2_clean' -eq $True) {
             Write-Host "`tPackage $pkg not found."
         }
     }
-
-    <# The HOME environment variable is needed for bash et al. 
-    $msys_user_home_path = Convert-Path $script:user_home_path; # The user may have specified another path..
-    if ($msys_user_home_path -ne $null) { # user settings 
-        #Write-Host "User HOME set to absolute path $user_home_path";
-        $Env:HOME = $msys_user_home_path;
-    }
-    else {
-        Write-Host "A path to the users HOME could not be found; the operating systems HOME will be used instead!";
-    }
-    #>
 
     $missing_packages_merged = $script:missing_packer_dependencies + $script:missing_yaml_packages;
     $are_packages_missing = $False;

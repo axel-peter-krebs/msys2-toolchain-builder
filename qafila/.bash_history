@@ -246,3 +246,10 @@ make clean
 pwd
 rm -rf MINGW-packages/
 exit
+cd ~
+pwd
+exit
+echo Hallo
+exit
+exit
+pwd

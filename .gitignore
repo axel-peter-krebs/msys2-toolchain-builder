@@ -1,18 +1,26 @@
 # Do not submit downloads
 downloads/
-# Do not submit unpacked/checked-out sources
-sources/
-
-# Do not submit GitHub checkouts!
 
 # Do not submit the installed MSYS2 runtime
 msys*/
 
+# Do not submit GitHub checkouts!
+MINGW-packages/
+MSYS2-packages/
+
 # The scratch folder is private
 scratch/
 
+scripts/
+
+# Do not submit unpacked/checked-out sources
+sources/
+
 # Do not publish the IDE & link!
 vscode*
-# Do not submit probes!
-.travis.yml
 
+# Do not submit links 
+*.lnk 
+
+# Do not submit CI!
+.travis.yml

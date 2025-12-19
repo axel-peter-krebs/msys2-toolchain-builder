@@ -11,25 +11,26 @@ use File::Basename;
 $YAML::Syck::ImplicitTyping = 1;
 
 # The script must be run in the MSYS2 environment. It uses the GNU commands provided therein, 
-# that is 'sh', 'perl', 'awk', 'sed' a.s.o. For a sample invocation s. msys2-installer.ps1 
-# (Function 'Run_Install_Script').
+# that is 'sh', 'perl', 'awk', 'sed' a.s.o. For a sample invocation s. msys2-inst.ps1 (Function 'Run_Install_Script').
 # Install packages, files and execute commands; the 'recipe' is in the YAML file, cmp. Ansible.
 
 # TODO: The successive steps contain file, command and package operations, which are executed in this order;
-# however, sometimes you want a package OP to be executed first!
-# Work-around: If package OP must be executed BEFORE file changes or commands, define a separate step.
+# however, sometimes you want a package OP to be executed first resp. a package installed and then run a command 
+# (like pacman -Syu for example) - 
+# Work-around: If a package OP must be executed _before_ any file changes or commands, define a separate next step.
 
 my $version = "1.0";
 my $arch = "mingw64";
 my $msys2_version = "3";
 
+# sequence: files-packages-commands (work-around s. comment above)
 struct ( TODO => 
     {
         'name' => '$',
         'description' => '$',
         'files' => '@',
-        'packages' => '@',
-        'commands' => '@'
+        'commands' => '@',
+        'packages' => '@'
     }
 );
 
@@ -43,7 +44,7 @@ my $recipes_path = dirname($yaml_file_path);
 my $path_separator = '\\'; 
 
 if($yaml_file_path eq "") {
-    print "A path to a YAML file must be provided as the first argument!";
+    print "A path to a 'recipe.yml' file must be provided as the first argument to this script!";
 }
 else {
     print "->Will open YAML file: $yaml_file_path (source file path: $recipes_path)!";
@@ -125,20 +126,20 @@ sub print_steps() {
         my $todo_desc = $todo->description();
         print "\n# STEP: $todo_name";
         print "\n\tDescription: $todo_desc";
+        my $packages_list = $todo->packages();
         my $files_list = $todo->files();
         foreach my $file_op ( @{ $files_list }) {
             foreach my $file_name (keys %{ $file_op } ) {
                 print "\n\tFile-OP: $file_name";
             }
         }
+        foreach my $pkg_string ( @{ $packages_list }) {
+            print "\n\tPackage-OP: $pkg_string";
+        } 
         my $commands_list = $todo->commands();
         foreach my $command_op ( @{ $commands_list }) {
             print "\n\tCommand-OP: $command_op";
         }
-        my $packages_list = $todo->packages();
-        foreach my $pkg_string ( @{ $packages_list }) {
-            print "\n\tPackage-OP: $pkg_string";
-        } 
     }
 }
 
@@ -148,20 +149,20 @@ sub execute_all() {
     foreach my $todo (@steps) {
         print "#! Executing step $todo!\n";
         my $files_list = $todo->files;
+        my $packages_list = $todo->packages;
         foreach my $file_ops_hash ( @{ $files_list }) {
             my $result = &file_op($file_ops_hash);
             print "\n=>OP-result: $result\n";
         }
+        foreach my $pkg_op ( @{ $packages_list }) {
+            my $result = &package_op($pkg_op);
+            print "\n=>OP-result: $result\n";
+        } 
         my $commands_list = $todo->commands;
         foreach my $command_string ( @{ $commands_list }) {
             my $result = &command_op($command_string);
             print "\n=>OP-result: $result\n";
         }
-        my $packages_list = $todo->packages;
-        foreach my $pkg_op ( @{ $packages_list }) {
-            my $result = &package_op($pkg_op);
-            print "\n=>OP-result: $result\n";
-        } 
     }
 }
 

@@ -1,7 +1,7 @@
 ---
   version: 1.0
 
-  platform: mingw64
+  arch: mingw64
 
   msys2-version: ">3.6.5"
 
@@ -44,14 +44,12 @@
         - "mingw-w64-x86_64-git-extra"
         - "mingw-w64-x86_64-git-credential-manager"
       commands:
-        - "sh -c 'echo DONE.'"
+        - "sh -c 'echo \"DONE. You'll find the git-bash.exe in the root folder of the MSYS2 installation.\"'"
 
     - name: '#4'
       description: "Start ssh-agent for user automatically when MSYS2 bash starts."
       files:
         - 'ssh-agent.sh':
-            target_dir: '/etc/profile.d'
-        - '001-qafila.sh':
             target_dir: '/etc/profile.d'
       packages: 
         - "gnupg"

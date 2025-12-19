@@ -1,7 +1,7 @@
 ---
   version: 1.0
 
-  platform: mingw64
+  arch: mingw64
 
   msys2-version: ">3.6.5"
 

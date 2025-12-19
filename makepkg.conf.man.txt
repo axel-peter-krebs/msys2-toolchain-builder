@@ -1,0 +1,60 @@
+MAKEPKG.CONF(5)                                                     Pacman Manual                                                     MAKEPKG.CONF(5)
+
+NAME
+       makepkg.conf - makepkg configuration file
+
+SYNOPSIS
+       /etc/makepkg.conf, $XDG_CONFIG_HOME/pacman/makepkg.conf, ˜/.makepkg.conf
+
+DESCRIPTION
+       Configuration options for makepkg are stored in makepkg.conf. This file is sourced so you can include any special compiler flags you wish to
+       use. This is helpful when building for different architectures or with different optimizations. However, only the variables described below
+       are exported to the build environment.
+
+           Note
+
+           This does not guarantee that all package Makefiles will use your exported variables. Some of them are non-standard.
+
+       The system-wide configuration file is found in /etc/makepkg.conf. Individual options can be overridden (or added to) on a per-user basis in
+       $XDG_CONFIG_HOME/pacman/makepkg.conf or ˜/.makepkg.conf, with the former taking priority.
+
+       The default file is fairly well commented, so it may be easiest to simply follow directions given there for customization.
+
+OPTIONS
+       DLAGENTS=('protocol::/path/to/command [options]' ...)
+           Sets the download agents used to fetch source files specified with a URL in the PKGBUILD(5) file. Options can be specified for each
+           command as well, and any protocol can have a download agent. Any spaces in option arguments are required to be escaped to avoid being
+           split. Several examples are provided in the default makepkg.conf.
+
+           If present, %u will be replaced with the download URL. Otherwise, the download URL will be placed on the end of the command. If present,
+           %o will be replaced with the local file name, plus a “.part” extension, which allows makepkg to handle resuming file downloads.
+
+       VCSCLIENTS=('protocol::package' ...)
+           Sets the packages required to fetch version controlled source files. When required, makepkg will check that these packages are installed
+           or are included in the depends or makedepends arrays in the PKGBUILD.
+
+       CARCH="carch"
+           Specifies your computer architecture; possible values include such things as “i686”, “x86_64”, “ppc”, etc. This should be automatically
+           set on installation.
+
+       CHOST="chost"
+           A string such as “i686-pc-linux-gnu”; do not touch this unless you know what you are doing. This can be commented out by most users if
+           desired.
+
+       CPPFLAGS="cppflags"
+           Flags used for the C preprocessor; see CFLAGS for more information.
+
+       CFLAGS="cflags"
+           Flags used for the C compiler. This is a key part to the use of makepkg. Usually several options are specified, and the most common string
+           resembles something like this: “-march=i686 -O2 -pipe”. Another useful option may be -mcpu in place of -march. Read gcc(1) for more
+           details on the wide variety of compiler flags available.
+
+       CXXFLAGS="cxxflags"
+           Flags used for the C++ compiler; see CFLAGS for more info.
+
+       LDFLAGS="ldflags"
+           Flags used for the linker. Several options may be specified with common usage resembling “-Wl,--hash-style=gnu”. Read ld(1) for more
+           details on available linker flags.
+
+       LTOFLAGS="ltoflags"
+ Manual page makepkg.conf(5) line 1/258 23% (press h for help or q to quit)

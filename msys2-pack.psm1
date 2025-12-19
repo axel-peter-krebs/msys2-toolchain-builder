@@ -10,15 +10,20 @@ param (
     [parameter(Position=1,Mandatory=$False)][String] $MSYS2_Packages_URL,
     [parameter(Position=2,Mandatory=$False)][String] $MSYS2_Packages_Dest,
     [parameter(Position=3,Mandatory=$False)][String] $MINGW64_Packages_URL,
-    [parameter(Position=4,Mandatory=$False)][String] $MINGW64_Packages_Dest
+    [parameter(Position=4,Mandatory=$False)][String] $MINGW64_Packages_Dest,
+    [parameter(Position=4,Mandatory=$False)][String] $MSYS2_Keyring_URL,
+    [parameter(Position=4,Mandatory=$False)][String] $MSYS2_Keyring_Dest
 )
 
 #Write-Host "Using MSYS2 packages URL: $MSYS2_Packages_URL";
 #Write-Host "Using MSYS2 packages destination: $MSYS2_Packages_Dest";
 #Write-Host "Using MINGW64 packages URL: $MINGW64_Packages_URL";
 #Write-Host "Using MINGW64 packages destination URL: $MINGW64_Packages_Dest";
+Write-Host "Using MSYS2 keyring URL: $MSYS2_Keyring_URL";
+Write-Host "Using MSYS2 keyring destination: $MSYS2_Keyring_Dest";
 
 $load_facts = [pscustomobject]@{
+    msys2_keyring_git_repo_dir = $null
     msys2_pkgs_git_repo_dir = $null
     msys2_pkgs_git_status = $null
     mingw64_pkgs_git_repo_dir = $null
@@ -32,10 +37,39 @@ Function Get_Packer_Load_Facts() {
 
 Export-ModuleMember 'Get_Packer_Load_Facts';
 
+$msys2_shell_cmd = "bash.exe -i -l"; # /usr/bin/bash.exe is on path; last resort..
+
 # Path must be set previously (not a parameter to module)
 $msys2_install_path = "$Env:MSYS2_HOME";
 if($msys2_install_path -eq $null) {
     $script:load_facts.'debug_messages' += "The Env:MSYS2_HOME was empty.. Must be set prior to invoking this module!";
+    return;
+}
+else {
+    $msys2_shell_cmd = "$msys2_install_path\msys2_shell.cmd"; # cmp. function Enter_Msys2_Shell in msys2-inst.ps1!
+    Write-Host "Using MSYS2 shell cmd entrypoint in $msys2_shell_cmd";
+}
+
+Function Run_In_Shell_Job() {
+    param (
+        [parameter(Position=0,Mandatory=$True)][String] $command,
+        [parameter(Position=1,Mandatory=$False)][String] $path,
+        [parameter(Position=2,Mandatory=$False)][String] $logfile
+    )
+    Write-Host "->Run_In_Shell_Job(command: '$command',path:'$path',logfile:'$logfile')";
+    $job_output = "/dev/null"; # background jobs shall not use STDOUT
+    if ($logfile -ne $null) {
+        $job_output = $logfile;
+    }
+    #$job_cmd = "bash.exe -c '$command' > $job_output 2>&1";
+    $job_cmd = "$msys2_shell_cmd -c '$command' > $job_output 2>&1";
+    Push-Location $path;
+    #$job = Start-Job -ScriptBlock { $job_cmd;  } # -Credential Domain01\User01 -WorkingDirectory $path
+    #$null = Wait-Job $job;
+    #$output = $job | Receive-Job -Wait -AutoRemove;
+    $output = iex "$job_cmd";
+    Pop-Location
+    return $output;
 }
 
 # Check preconditions for building packages
@@ -45,7 +79,15 @@ if($msys2_package_repo_exists) {
     $script:load_facts.'msys2_pkgs_git_repo_dir' = $MSYS2_Packages_Dest;
 }
 else {
-    $script:load_facts.'debug_messages' += "No MSYS2 (Cygwin) package repository found in folder $MSYS2_Packages_Dest!";
+    $script:load_facts.'debug_messages' += "No MSYS2 package repository found in folder $MSYS2_Packages_Dest!";
+}
+
+$msys2_keyring_repo_exists = Test-Path $($MSYS2_Keyring_Dest);
+if($msys2_keyring_repo_exists) {
+    $script:load_facts.'msys2_keyring_git_repo_dir' = $MSYS2_Keyring_Dest;
+}
+else {
+    $script:load_facts.'debug_messages' += "No MSYS2 keyring repository found in folder $MSYS2_Packages_Dest!";
 }
 
 $mingw64_package_repo_exists = Test-Path $($MINGW64_Packages_Dest);
@@ -76,7 +118,18 @@ Function Receive_PGP_Keys() {
         done
     done
     #>
+
+    <#
+        pacman-key --recv-keys 3176EF7DB2367F1FCA4F306B1F9B0E909AF37285
+        pacman-key --lsign-key 3176EF7DB2367F1FCA4F306B1F9B0E909AF37285
+    #>
 }
+
+Function Import_MSYS2_Keyring() {
+
+}
+
+Export-ModuleMember 'Import_MSYS2_Keyring'; 
 
 Function MakePKG_MSYS2() {
     param (
@@ -84,25 +137,25 @@ Function MakePKG_MSYS2() {
     )
     $msys2_packages_dir = $script:load_facts.'msys2_pkgs_git_repo_dir';
     $pkgbuild_dir = "$msys2_packages_dir\$pkg_name";
-    $pgkbuild_cygpath = cygpath -u $pkgbuild_dir;
-    Write-Host "Building package in $pgkbuild_cygpath..";
-    $result = "NONE";
+    $pgkbuild_posixpath = cygpath -u $pkgbuild_dir;
+    Write-Host "Build package in $pkgbuild_dir, Posix path: $pgkbuild_posixpath";
+    $shell_log = "NONE";
     try {
-        Push-Location $pkgbuild_dir; # now, current path for bash is this location
         #iex "sh -c '. /etc/makepkg.conf'"; #| Write-Host
         #$print_srcinfo_cmd = "makepkg --printsrcinfo";
         #iex "sh -c '$print_srcinfo_cmd'";
         #$bash_cmd = "makepkg --packagelist";
         #$bash_cmd = "makepkg --check $pkg"; no key verification! (TODO)
-        $bash_cmd = "makepkg --syncdeps --noconfirm --needed --install";
-        $result = iex "sh -c '$bash_cmd' 2>&1"; # This will source the bash scripts, e.g. set environments etc.
-        Pop-Location
+        $bash_cmd = "makepkg --skipinteg  --syncdeps --noconfirm --needed --install";
+        #$shell_log = iex "sh -c '$bash_cmd' 2>&1";
+        $job_id = Run_In_Shell_Job $bash_cmd $pkgbuild_dir "makepkg_log.txt";
+        Write-Host "->Run_In_Shell_Job returned $job_id";
     }
     catch {
-        Write-Host "Problem installing $pkg!";
-
+        Write-Host "Problem installing $pkg_name!";
+        $shell_log = $_;
     }
-    return $result;
+    return $shell_log;
 }
 
 Export-ModuleMember 'MakePKG_MSYS2'; 

@@ -1,7 +1,7 @@
 ---
   version: 1.0
 
-  platform: ucrt64
+  arch: ucrt64
 
   msys2-version: ">3.6.5"
 
