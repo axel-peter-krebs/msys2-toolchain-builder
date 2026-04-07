@@ -19,8 +19,8 @@ param (
 #Write-Host "Using MSYS2 packages destination: $MSYS2_Packages_Dest";
 #Write-Host "Using MINGW64 packages URL: $MINGW64_Packages_URL";
 #Write-Host "Using MINGW64 packages destination URL: $MINGW64_Packages_Dest";
-Write-Host "Using MSYS2 keyring URL: $MSYS2_Keyring_URL";
-Write-Host "Using MSYS2 keyring destination: $MSYS2_Keyring_Dest";
+#Write-Host "Using MSYS2 keyring URL: $MSYS2_Keyring_URL";
+#Write-Host "Using MSYS2 keyring destination: $MSYS2_Keyring_Dest";
 
 $load_facts = [pscustomobject]@{
     msys2_keyring_git_repo_dir = $null

@@ -5,19 +5,25 @@
 param (
     [parameter(Position=0,Mandatory=$True)][String] $MSYS2_Path,
     [parameter(Position=1,Mandatory=$False)][String] $MSYS2_Download_URL,
-    [parameter(Position=2,Mandatory=$False)][Bool] $sync_on_start
+    [parameter(Position=2,Mandatory=$False)][Bool] $sync_on_start,
+    [parameter(Position=3,Mandatory=$False)][Bool] $debug
 )
 
-<#
-Write-Host "MSYS2_Path: $MSYS2_Path"
-Write-Host "MSYS2_Download_URL: $MSYS2_Download_URL"
-Write-Host "sync_on_start: $sync_on_start"
-#>
+Function __log_if_debug([string] $debug_message) {
+    if ($debug -eq $true) {
+        Write-Host $debug_message;
+    }
+}
+
+__log_if_debug "Called msys2-env.psm1; parameters: ";
+__log_if_debug "`tMSYS2_Path: $MSYS2_Path"
+__log_if_debug "`tMSYS2_Download_URL: $MSYS2_Download_URL"
+__log_if_debug "`tsync_on_start: $sync_on_start"
 
 # When executing this script, some facts about the environment are gathered 
 # and kept in this hashtable for investigation by the caller.
 $load_facts = [pscustomobject]@{
-    msys2_install_dir = $null
+    msys2_path = $null
     msys2_clean = $False # eq 'synchronized'; 
     msys2_packages = @{} # make list of installed packages available outside this module
     avail_progs = @()
@@ -40,16 +46,52 @@ if($MSYS2_path_exists -ne $True) {
     $script:load_facts.'debug_messages' += "Could not find path to MSYS2 installation, looking @ '$MSYS2_Path'! \
         Either change the 'msys2.install.dir' property in 'msys2.properties' to point to a valid MSYS2 installation, \
         or install MSYS2 in the 'MSYS2' subdirectory (default) manually.";
+
+    Function Msys2_Install() {
+        param (
+            [parameter(Position=0,Mandatory=$False)][String] $download_url,
+            [parameter(Position=1,Mandatory=$False)][String] $download_folder
+        )
+
+        __log_if_debug "Installing MSYS2 to folder $MSYS2_Path."
+
+        $_dwnld_url = "";
+        #& 'C:\Program Files\IIS\Microsoft Web Deploy\msdeploy.exe'
+        if ($download_url -ne $null) {
+            $_dwnld_url = $download_url;
+        }
+        else {
+            if($MSYS2_Download_URL -ne $null) {
+                $_dwnld_url = $MSYS2_Download_URL;
+            }
+            else {
+                Write-Host "Problem: You've neither specified a download URL as an argument, \
+                    nor was the download URL given in the msys2.properties file!"
+                return
+            }
+        }
+    }
+
+    Function Msys_Help() {
+        Write-Host "Available options are: "
+        Write-Host "`tmsys_install [download_url] [download_folder]: Installs the downloaded MSYS2 to $MSYS2_Path (as specified in 'msys2.install.dir')"
+        Write-Host "`tHint: If you want to install to another location, you must specify this property in 'msys2.properties'."
+        
+    }
+
+    Export-ModuleMember 'Msys2_Install';
+    Export-ModuleMember 'Msys_Help';
 }
 else {
-    $Env:MSYS2_HOME = Convert-Path "$($MSYS2_Path)"; # we'll test this later..
-    $script:load_facts.'msys2_install_dir' = $Env:MSYS2_HOME;
-}
 
-# Now that we have MSYS2 on PATH, we can check some progs and config, like existing files etc. 
-# AND: install packages! (Maybe)
-# Note: All MSYS2 progs ought to be called in a bash-like manner, e.g. iex "sh -c $program"!
-if($script:load_facts.'msys2_install_dir' -ne $null) {
+    __log_if_debug "Found MSYS2 installation in directory '$MSYS2_Path'";
+
+    $Env:MSYS2_HOME = Convert-Path "$($MSYS2_Path)"; # we'll test this later..
+    $script:load_facts.'msys2_path' = $Env:MSYS2_HOME; #remember 
+
+    # Now that we have MSYS2 on PATH, we can check some progs and config, like existing files etc. 
+    # AND: install packages! (Maybe)
+    # Note: All MSYS2 progs ought to be called in a bash-like manner, e.g. iex "sh -c $program"!
 
     # Set 'Env:Path' variable to 'Env:MSYS2_HOME\usr\bin\' so we can execute programs like 
     # 'cygpath', 'rm', 'uname'. 'which' etc.
@@ -59,6 +101,9 @@ if($script:load_facts.'msys2_install_dir' -ne $null) {
     $user_env_msystem = $Env:MSYSTEM;
     if ( $user_env_msystem -eq $null ) {
         $script:load_facts.'debug_messages' += "The environment variable MSYSTEM is not set! ";
+    }
+    else {
+        __log_if_debug "The MSYSTEM environment variable was set to '$user_env_msystem'!";
     }
     # $Env:MSYSTEM = "ucrt64" ??? 
 
@@ -140,7 +185,8 @@ if($script:load_facts.'msys2_install_dir' -ne $null) {
     }
 
     if ( $pacman_lock -eq $True ) { # True = pacman locked
-        $script:load_facts.'debug_messages' += "Cannot load packages: file $pacman_lock_file exists! Unlock with 'msys_unlock'."
+        Write-Host "Pacman lock file found! Unlock with 'msys_unlock'"
+        $script:load_facts.'debug_messages' += "Cannot load packages: file $pacman_lock_file exists!"
 
         Function Msys_Unlock() {
             try {
@@ -218,42 +264,7 @@ if($script:load_facts.'msys2_install_dir' -ne $null) {
     Export-ModuleMember 'Msys_Sync_Packages';  # Update the database
     Export-ModuleMember 'Msys_Install_Package';  # Install a package
     Export-ModuleMember 'Msys_System_Upgrade';
-
+    Export-ModuleMember 'Msys_Help'; # Show beforementioned commands
 }
 
-else {
 
-    Function Msys2_Install() {
-        param (
-            [parameter(Position=0,Mandatory=$False)][String] $download_url,
-            [parameter(Position=1,Mandatory=$False)][String] $download_folder
-        )
-        Write-Host "Installing MSYS2 to $MSYS2_Path .."
-        $_dwnld_url = "";
-        #& 'C:\Program Files\IIS\Microsoft Web Deploy\msdeploy.exe'
-        if ($download_url -ne $null) {
-            $_dwnld_url = $download_url;
-        }
-        else {
-            if($MSYS2_Download_URL -ne $null) {
-                $_dwnld_url = $MSYS2_Download_URL;
-            }
-            else {
-                Write-Host "Problem: You've neither specified a download URL as an argument, \
-                    nor was the download URL given in the msys2.properties file!"
-                return
-            }
-        }
-    }
-
-    Function Msys_Help() {
-        Write-Host "Available options are: "
-        Write-Host "`tmsys_install [download_url] [download_folder]: Installs the downloaded MSYS2 to $MSYS2_Path (as specified in 'msys2.install.dir')"
-        Write-Host "`tHint: If you want to install to another location, you must specify this property in 'msys2.properties'."
-        
-    }
-
-    Export-ModuleMember 'Msys2_Install';
-}
-
-Export-ModuleMember 'Msys_Help';

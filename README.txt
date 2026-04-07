@@ -31,35 +31,19 @@ The first goal is to make Linux GUI environments available on Windows. Note: Thi
 Samples for 'cross-platform' GUI libraries (s. https://en.wikipedia.org/wiki/List_of_platform-independent_GUI_libraries) are: 
 
 	- CEGUI Used for gaming apps primarily
-	- ELF used in the "Enlightenment" desktop environment for Linux; cmp. https://www.enlightenment.org/docs/distros/windows-start.md
+	- EFL used in the "Enlightenment" desktop environment for Linux; cmp. https://www.enlightenment.org/docs/distros/windows-start.md
 	- FLTK (Fast Light Toolkit), cmp. https://www.fltk.org/
 	- GTK (Gnome Toolkit); cmp. https://gtk-rs.org/
 	- IUP s. https://www.tecgraf.puc-rio.br/iup/
-	- Qt5/6, cmp. https://wiki.qt.io/MinGW-64-bit
+	- Qt5/6, cmp. https://wiki.qt.io/MinGW-64-bit (already accomplished)
 	- TK (Tcl/Tk, Not TKinter)
 	- others
 
 Samples should be given how to use these libraries on different platforms, in MSYS2-speak this is "environments": 
 
-	- Gtk3 application compiled with MINGW64/UCRT64 GNU tools;
-	- GTK4 application with Python3 bindings compiled with 
-
-The next goal of is to build the LLVM library from source, using CMake which is the recommended way. CMake is already provided as a package in MSYS2, however, and can be easily 
-installed with "pacman -S --needed cmake" or CMake for Windows, provided as a NuGet package on chocolatey: choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System';
-The MSYS2 pacman command installs the Cygwin version. The first decision to made here is to decide upon the "environment" in which the LLVM source code will be build, 
-that is MING32, MING64 etc. Since the LLVM runs on almost any platform, the decision shall be guided by the platform where the development is taking place, 
-e.g. 'mingw-w64-i686-cmake' for older Windows versions, 'mingw-w64-x86_64-ccmake' or 'mingw-w64-ucrt-x86_64-ccmake' for newer Windows versions. I'm running on Window 8.1, 
-thus I chose the newer MINGW64 environment. It must be noted, however, that packages for LLVM exist for every MSYS2 environment already.. Thus, this example is mereley a test-run 
-for CMAKE and MINGW64 to build the LLVM library. Cmp. https://packages.msys2.org/base/mingw-w64-llvm.
-
-Steps to reproduce: 
-  a) Install MSYS2 and the GIT repository for MINGW-packages. 
-  b) Build the CMake package that best suits your development platform, e.g. 
-
-The final goal of this "etude" is to build a MSYS2 package based on the newer Clang/LLVM architecture using a Rust frontend. The package shall make use of one of the many 
-UI libraries provided for cross-platform development. 
-
-
+	- Gtk3 application compiled with MINGW32 GNU tools;
+	- GTK4 application with Python3 bindings compiled with MINGW64/UCRT64 GNU tools
+	- WebAssembly compiled with LLVM/Clang toolchain.
 
 Of which GTK and Qt are the most prominent; the latter is used in KDE, and it must be noted, that a project exists on "develop.kde.org" 
 that shows how to build KDE software for Windows 10 and 11, called "craft", s. https://develop.kde.org/docs/getting-started/building/craft/. 
@@ -75,10 +59,6 @@ Installation steps:
 	  (arab. for 'caravan'). Use the 'git-for-windows' recipe to establish the proper environment, including pgp managment 
 	  and check-summing the downloaded package. 
 	* Install the CMake package for UCRT64 from source. 
-
-	* Install additional packages needed: 
-	  - mingw-w64-x86_64-xmake 
-	  
 	* The 'llvm-mingw' builder builds toolchains for Windows platforms, cmp. the *.sh scripts contained in the 'source';
 	  However, these will be migrated to a Perl script which in turn can be executed from PowerShell.
 	  Note: Perl is pre-installed on the initial MSYS2 installation (whilst Python etc. is not; this will be done with PKGBUILD)
