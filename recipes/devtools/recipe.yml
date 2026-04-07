@@ -1,0 +1,38 @@
+---
+  version: 1.0
+
+  arch: mingw64
+
+  msys2-version: ">3.6.5"
+
+  steps:
+    - name: "#1"
+      description: "Add required dependencies."
+      packages:
+        - "base-devel"
+        - "gawk"
+        - "bash"
+        - "binutils"
+        - "breezy"
+        - "coreutils"
+        - "curl"
+        - "diffutils"
+        - "findutils"
+        - "git"
+        - "grep"
+        - "jq"
+        - "mercurial"
+        - "openssh"
+        - "parallel"
+        - "rsync"
+        - "sed"
+        - "subversion"
+        - "util-linux"
+        - "mingw-w64-x86_64-bat"
+        - "mingw-w64-x86_64-asciidoctor"
+      commands: 
+        - "sh -c 'pacman -Suu --noconfirm'"
+        
+    - name: "#2"
+      description: "TODO."
+      

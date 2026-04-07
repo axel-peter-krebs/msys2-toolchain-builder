@@ -1,0 +1,50 @@
+# Toolchain for programming Qt6 GUI apps on Android.
+
+# GOAL:
+  - Develop Qt6 UI applications on MSYS2 (MINGW64).
+
+# Description: 
+
+mingw-w64-x86_64-qt6 consists of: 
+
+mingw-w64-x86_64-qt6-3d
+mingw-w64-x86_64-qt6-5compat
+mingw-w64-x86_64-qt6-activeqt
+mingw-w64-x86_64-qt6-base
+mingw-w64-x86_64-qt6-charts
+mingw-w64-x86_64-qt6-connectivity
+mingw-w64-x86_64-qt6-datavis3d
+mingw-w64-x86_64-qt6-declarative
+mingw-w64-x86_64-qt6-doc
+mingw-w64-x86_64-qt6-grpc
+mingw-w64-x86_64-qt6-httpserver
+mingw-w64-x86_64-qt6-imageformats
+mingw-w64-x86_64-qt6-languageserver
+mingw-w64-x86_64-qt6-location
+mingw-w64-x86_64-qt6-lottie
+mingw-w64-x86_64-qt6-multimedia
+mingw-w64-x86_64-qt6-networkauth
+mingw-w64-x86_64-qt6-positioning
+mingw-w64-x86_64-qt6-quick3d
+mingw-w64-x86_64-qt6-quick3dphysics
+mingw-w64-x86_64-qt6-quickeffectmaker
+mingw-w64-x86_64-qt6-quicktimeline
+mingw-w64-x86_64-qt6-remoteobjects
+mingw-w64-x86_64-qt6-scxml
+mingw-w64-x86_64-qt6-sensors
+mingw-w64-x86_64-qt6-serialbus
+mingw-w64-x86_64-qt6-serialport
+mingw-w64-x86_64-qt6-shadertools
+mingw-w64-x86_64-qt6-speech
+mingw-w64-x86_64-qt6-svg
+mingw-w64-x86_64-qt6-tools
+mingw-w64-x86_64-qt6-translations
+mingw-w64-x86_64-qt6-virtualkeyboard
+mingw-w64-x86_64-qt6-webchannel
+mingw-w64-x86_64-qt6-websockets
+mingw-w64-x86_64-qt6-webview
+
+These are deprecated as of Qt6:
+"mingw-w64-x86_64-qt6-graphs"
+"mingw-w64-x86_64-qt6-mqtt"
+"mingw-w64-x86_64-qt6-pdf"

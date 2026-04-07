@@ -1,0 +1,76 @@
+---
+  version: 1.0
+
+  arch: clangarm64
+
+  msys2-version: ">3.6.7-4"
+
+  steps:
+    - name: "#1"
+      description: "Update MSYS2 packages"
+      commands: 
+        - "sh -c 'pacman -Syu --noconfirm'"
+        
+    - name: "#2"
+      description: "Add Qt5 libraries."
+      packages:
+        - "mingw-w64-clang-aarch64-qt5-3d"
+        - "mingw-w64-clang-aarch64-qt5-activeqt"
+        - "mingw-w64-clang-aarch64-qt5-base"
+        - "mingw-w64-clang-aarch64-qt5-base-debug"
+        - "mingw-w64-clang-aarch64-qt5-charts"
+        - "mingw-w64-clang-aarch64-qt5-connectivity"
+        - "mingw-w64-clang-aarch64-qt5-datavis3d"
+        - "mingw-w64-clang-aarch64-qt5-declarative"
+        - "mingw-w64-clang-aarch64-qt5-doc"
+        - "mingw-w64-clang-aarch64-qt5-gamepad"
+        - "mingw-w64-clang-aarch64-qt5-graphicaleffects"
+        - "mingw-w64-clang-aarch64-qt5-imageformats"
+        - "mingw-w64-clang-aarch64-qt5-location"
+        - "mingw-w64-clang-aarch64-qt5-lottie"
+        - "mingw-w64-clang-aarch64-qt5-multimedia"
+        - "mingw-w64-clang-aarch64-qt5-networkauth"
+        - "mingw-w64-clang-aarch64-qt5-pdf"
+        - "mingw-w64-clang-aarch64-qt5-purchasing"
+        - "mingw-w64-clang-aarch64-qt5-quick3d"
+        - "mingw-w64-clang-aarch64-qt5-quickcontrols"
+        - "mingw-w64-clang-aarch64-qt5-quickcontrols2"
+        - "mingw-w64-clang-aarch64-qt5-quicktimeline"
+        - "mingw-w64-clang-aarch64-qt5-remoteobjects"
+        - "mingw-w64-clang-aarch64-qt5-script"
+        - "mingw-w64-clang-aarch64-qt5-scxml"
+        - "mingw-w64-clang-aarch64-qt5-sensors"
+        - "mingw-w64-clang-aarch64-qt5-serialbus"
+        - "mingw-w64-clang-aarch64-qt5-serialport"
+        - "mingw-w64-clang-aarch64-qt5-speech"
+        - "mingw-w64-clang-aarch64-qt5-svg"
+        - "mingw-w64-clang-aarch64-qt5-tools"
+        - "mingw-w64-clang-aarch64-qt5-translations"
+        - "mingw-w64-clang-aarch64-qt5-virtualkeyboard"
+        - "mingw-w64-clang-aarch64-qt5-webchannel"
+        - "mingw-w64-clang-aarch64-qt5-webglplugin"
+        - "mingw-w64-clang-aarch64-qt5-websockets"
+        - "mingw-w64-clang-aarch64-qt5-webview"
+        - "mingw-w64-clang-aarch64-qt5-winextras"
+        - "mingw-w64-clang-aarch64-qt5-xmlpatterns"
+
+    - name: "#3"
+      description: "Install dev tools"
+      packages:
+        - "mingw-w64-clang-aarch64-cc"
+        - "mingw-w64-clang-aarch64-meson"
+        - "mingw-w64-clang-aarch64-ninja"
+        - "mingw-w64-clang-aarch64-git-gui"
+        - "mingw-w64-clang-aarch64-qt-creator"
+        - "mingw-w64-clang-aarch64-python-pyqt5"
+        - "mingw-w64-clang-aarch64-python-pyqt5-3d"
+        - "mingw-w64-clang-aarch64-pyqt5-sip"
+        - "mingw-w64-clang-aarch64-python-build"
+        - "mingw-w64-clang-aarch64-python-installer"
+        - "mingw-w64-clang-aarch64-python-setuptools"
+
+    - name: "#4"
+      description: "TODO"
+      commands:
+        - "sh -c 'echo DONE!'"
+        

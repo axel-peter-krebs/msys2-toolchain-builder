@@ -1,0 +1,1 @@
+The samples shall show how to use cross-platform UI libraries on different toolchains targeting the Windows platform.

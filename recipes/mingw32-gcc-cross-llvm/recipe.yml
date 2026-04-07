@@ -1,0 +1,63 @@
+---
+  version: 1.0
+
+  arch: mingw32
+
+  msys2-version: "<3.6.5"
+  
+  goals: "Establish a toolchain to compile with GCC on win32 platform ( Windows95, WindowsNT). Add tools and scripting language support."
+
+  steps:
+    - name: "#1"
+      description: "Update MSYS2  packages."
+      commands: 
+        - "sh -c 'pacman -Syu --noconfirm'"
+      
+    - name: "#2"
+      description: "Compiler backend"
+      packages:
+        - "base-devel"
+        - "clang"
+        - "cmake" 
+        - "mingw-w64-i686-gcc"
+        - "mingw-w64-cross-mingw32-binutils"
+        - "mingw-w64-cross-mingw32-gcc"
+        - "mingw-w64-i686-meson"
+        - "ninja"
+        
+    - name: '#3'
+      description: "Update MSYS2 runtime (sync)"
+      commands:
+        - "sh -c 'pacman -Syyuu --noconfirm'"
+    
+    - name: "#4"
+      description: "Install scritping languages supporting win32 API and development tools."
+      packages:
+        - "git"
+        - "lua"
+        - "mingw-w64-i686-lua"
+        - "mingw-w64-i686-lua-lpeg"
+        - "mingw-w64-i686-lua51"
+        - "mingw-w64-i686-lua51-bitop"
+        - "mingw-w64-i686-lua51-lpeg"
+        - "mingw-w64-i686-lua51-lsqlite3"
+        - "mingw-w64-i686-lua53"
+        - "mingw-w64-i686-luajit"
+        - "mingw-w64-i686-git-gui"
+        - "mingw-w64-i686-git-for-windows-addons"
+        - "python"
+        - "wget"
+        
+    - name: "#5"
+      description: "Update MSYS2  packages again."
+      commands: 
+        - "sh -c 'pacman -Syu --noconfirm'"
+        
+    - name: '#6'
+      description: "Start ssh-agent for user automatically when MSYS2 bash starts."
+      files:
+        - 'ssh-agent.sh':
+            target_dir: '/etc/profile.d'
+      packages: 
+        - "gnupg"
+        - "openssl"
