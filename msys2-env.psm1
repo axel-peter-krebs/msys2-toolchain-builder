@@ -15,7 +15,10 @@ Function __log_if_debug([string] $debug_message) {
     }
 }
 
-__log_if_debug "Called msys2-env.psm1; parameters: ";
+Write-Host "Called msys2-env.psm1, 'debug' set to $debug;"
+if ($debug -ne $True) {
+    Write-Host "Set 'debug' to True if you want to debug parameters!";
+}
 __log_if_debug "`tMSYS2_Path: $MSYS2_Path"
 __log_if_debug "`tMSYS2_Download_URL: $MSYS2_Download_URL"
 __log_if_debug "`tsync_on_start: $sync_on_start"
@@ -42,8 +45,9 @@ Export-ModuleMember 'Get_Module_Load_Facts'; # Print information about the MSYS2
 # Test if $MSYS2_Path and $MSYS2_User exist.. 
 $MSYS2_path_exists = Test-Path $($MSYS2_Path);
 
-if($MSYS2_path_exists -ne $True) {
-    $script:load_facts.'debug_messages' += "Could not find path to MSYS2 installation, looking @ '$MSYS2_Path'! \
+if($MSYS2_path_exists -ne $True) { # no MSYS2 installation folder found
+
+    $script:load_facts.'debug_messages' += "Could not find path to MSYS2 installation, looking at '$MSYS2_Path'! \
         Either change the 'msys2.install.dir' property in 'msys2.properties' to point to a valid MSYS2 installation, \
         or install MSYS2 in the 'MSYS2' subdirectory (default) manually.";
 
@@ -115,11 +119,15 @@ else {
 
     # Now that we have the MSYS2 executables in PATH, the paths to GNU programs are standardized. 
     # Memento: The EXE used here is that of MSYS2 (Cygwin), but not MINGW64 etc.
+    # Also memento: the 'which' command will find ALL occurences of the program in the PATH set by Windows!
     $u_name_rv = iex "uname -rv";
     $which_bash = iex "sh -c 'which bash'";
     $which_curl = iex "sh -c 'which curl'";
     $which_git = iex "sh -c 'which git'";
+    $which_jq = iex "sh -c 'which jq'";
+    $which_openssh = iex "sh -c 'which openssh'";
     $which_perl = iex "sh -c 'which perl'";
+    $which_python2 = iex "sh -c 'which python'";
     $which_wget = iex "sh -c 'which wget'";
 
     $script:load_facts.'avail_progs' += ($which_bash, $which_curl, $which_git, $which_perl, $which_wget);

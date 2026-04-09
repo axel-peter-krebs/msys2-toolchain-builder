@@ -7,17 +7,15 @@ echo "[/etc/profile.d/ssh-agent.sh] Starting ssh-agent.."
 
 SSH_ENV=$HOME/.ssh/environment
 
-echo "..SSL keys a.s.o. can be found in '${SSH_ENV}'!"
-
 # start the ssh-agent
 function start_agent {
-    #echo "Initializing new SSH agent..."
+    echo "Initializing new SSH agent in $SSH_ENV.."
     # spawn ssh-agent
     /usr/bin/ssh-agent | sed 's/^echo/#echo/' > ${SSH_ENV}
-    echo succeeded
     chmod 600 ${SSH_ENV}
     . ${SSH_ENV} > /dev/null
     /usr/bin/ssh-add
+	echo ".. Success!"
 }
 
 if [ -f "${SSH_ENV}" ]; then

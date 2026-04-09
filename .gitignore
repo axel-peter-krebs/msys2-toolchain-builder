@@ -7,6 +7,11 @@ sources/
 # Do not submit the installed MSYS2 runtime
 msys*/
 
+# Do not commit the MINGW-packages, MSYS2-keyring, MSYS2-packages
+MINGW-packages/
+MSYS2-keyring/
+MSYS2-packages/
+
 # The scratch folder is private
 scratch/
 

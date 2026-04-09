@@ -1,0 +1,110 @@
+---
+  version: 1.0
+
+  arch: clang64
+
+  msys2-version: ">3.6.5"
+  
+  goals: "Establish an LLVM toolchain with Rust compiler frontend to build Windows [10] native applications with GTK4."
+
+  steps:
+
+    - name: "#1"
+      description: "Update MSYS2  packages."
+      commands: 
+        - "sh -c 'pacman -Syu --noconfirm'"
+        
+    - name: "#2"
+      description: "Install GNU tools needed for downloading, compiling and generating."
+      packages:
+        - "autotools"
+        - "base-devel"
+        - "cmake"
+        - "cygutils"
+        - "diffutils"
+        - "gcc"
+        - "git"
+        - "help2man"
+        - "ninja"
+        - "patch"
+        - "perl-File-next"
+        - "rsync"
+        - "rust"
+        - "python"
+        - "unzip"
+        - "zip"
+        - "zlib-devel"
+        
+    - name: '#3'
+      description: "Update MSYS2 runtime (sync)"
+      commands:
+        - "sh -c 'pacman -Syyuu --noconfirm'"
+        
+    - name: '#4'
+      description: "Install components in 'mingw-w64-ucrt-x86_64-toolchain', GTK4 build dependencies and additional tools (Rust-Cargo)."
+      packages: 
+        - "mingw-w64-ucrt-x86_64-toolchain"
+        - "mingw-w64-ucrt-x86_64-cc"
+        - "mingw-w64-ucrt-x86_64-crt"
+        - "mingw-w64-ucrt-x86_64-gi-docgen"
+        - "mingw-w64-ucrt-x86_64-gobject-introspection"
+        - "mingw-w64-ucrt-x86_64-http-parser"
+        - "mingw-w64-ucrt-x86_64-libgit2"
+        - "mingw-w64-ucrt-x86_64-libssh2"
+        - "mingw-w64-ucrt-x86_64-libxslt"
+        - "mingw-w64-ucrt-x86_64-meson"
+        - "mingw-w64-ucrt-x86_64-nasm"
+        - "mingw-w64-ucrt-x86_64-ninja"
+        - "mingw-w64-ucrt-x86_64-pkgconf"
+        - "mingw-w64-ucrt-x86_64-python-docutils"
+        - "mingw-w64-ucrt-x86_64-sassc"
+        - "mingw-w64-ucrt-x86_64-shaderc"
+        - "mingw-w64-ucrt-x86_64-vulkan-headers"
+        - "mingw-w64-ucrt-x86_64-rust"
+        - "mingw-w64-ucrt-x86_64-rust-bindgen"
+        - "mingw-w64-ucrt-x86_64-rust-src"
+        - "mingw-w64-ucrt-x86_64-rustup"
+        - "mingw-w64-ucrt-x86_64-winpthreads"
+        - "mingw-w64-ucrt-x86_64-cmake-gui"
+        - "mingw-w64-ucrt-x86_64-git-gui"
+        
+    - name: '#5'
+      description: "Install UCRT64 libraries for UI development on Windows"
+      packages:
+        - "mingw-w64-ucrt-x86_64-gtk4"
+        - "mingw-w64-ucrt-x86_64-gst-plugins-good"
+        - "mingw-w64-ucrt-x86_64-efl"
+        - "gettext-devel"
+        - "glib2-devel"
+        - "libffi-devel"
+        - "libiconv-devel"
+                
+    - name: '#6'
+      description: "cp assets into MSYS2 installation [not yet working beause globbing not functional!]"
+      files:
+        - '/usr/share':
+            new_dir: 'themes'
+        - '/usr/share/themes':
+            new_dir: 'Windows10'
+        - '/usr/share/themes/Windows10':
+            new_dir: 'gtk-4.0'
+        - 'gtk-3.20/gtk.css':
+            target_dir: '/usr/share/themes/Windows10/gtk-4.0'
+        - 'gtk-3.20/gtk-dark.css':
+            target_dir: '/usr/share/themes/Windows10/gtk-4.0'
+        - 'gtk-3.20/settings.ini':
+            target_dir: '/usr/share/themes/Windows10/gtk-4.0'
+        - 'gtk-3.20/thumbnail.png':
+            target_dir: '/usr/share/themes/Windows10/gtk-4.0'
+        - '/usr/share/themes/Windows10/gtk-4.0':
+            new_dir: 'assets'
+        - gtk-3.20/*:
+            target_dir: '/usr/share/themes/Windows10/gtk-4.0/assets'
+        - '/etc':
+            new_dir: 'gtk-4.0'
+        - 'settings.ini':
+            target_dir: '/etc/gtk-4.0'
+      packages: 
+        - "gnupg"
+        - "openssl"
+        

@@ -28,12 +28,18 @@ Function __log_if_debug([string] $debug_message) {
 #    .\msys2-inst.ps1; # reload the whole script
 #}
 
+# Assume fixed path to MSYS2-packages and MINGW-packages for convenience;
+# Another possible solution would be to install them to /usr/src
+$msys2_packages_master_src_dir = "$script:Current_Script_loc\MSYS2-packages";
+$mingw64_packages_master_src_dir = "$script:Current_Script_loc\MINGW-packages";
+$msys2_keyring_master_src_dir = "$script:Current_Script_loc\MSYS2-keyring";
+
 # Assume sensible defaults for MSYS2 location, MSYS2 user, download location, source location a.s.o.
 $settings = @{
     'sync.on.start' = "True";
     'downloads.dir' = "downloads"; # default location for downloads
     'msys2.install.dir' = "msys64"; # default as provided by installer, can be overridden in msys2.properties file
-    'msys2.download.url' = "https://repo.msys2.org/distrib/x86_64/msys2-x86_64-20250830.exe"; 
+    'msys2.download.url' = "https://repo.msys2.org/distrib/x86_64/msys2-x86_64-20240113.exe"; # Defaults to Windows 8.1! For a newer version, change the property..
     'msys2.packages.master.url' = "https://github.com/msys2/MSYS2-packages.git"; 
     'msys2.mingw64.packages.master.url' = "https://github.com/msys2/MINGW-packages.git"; 
     'msys2.mingw64.hdl.url' = ""; # MINGW-w32
@@ -106,6 +112,7 @@ if ($show_debug_information) {
     print_settings
 }
 
+# This is demanded by PowerShell to make downloads 
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 # Set the path to the MSYS2 executables (GNU programs)
@@ -212,19 +219,33 @@ Function Run_Install_Script() {
 # Cmp. https://packages.msys2.org/packages/base-devel?variant=x86_64
 # S. also https://wiki.archlinux.org/title/Makepkg
 $required_packages_for_packing = @(
+	"autotools",
     "base-devel", # base|binutils|bison|diffstat|diffutils|dos2unix|file|flex|gawk|gettext|grep|make|pacman|patch|sed|tar|texinfo|texinfo-tex
+	#"bash", # default installed!
+	"breezy",
     "cmake", # MSYS2 (Cygwin) package!
-    "curl"
+	#"coreutils", # default installed!
+    #"curl", # default installed!
     "cygutils",
     "diffutils",
+	#"findutils", # default installed!
     "git",
+	#"grep", # default installed!
     "help2man",
+	"jq",
+	"mercurial",
+	#"mingw-w64-bat",
+	#"mingw-w64-x86_64-asciidoctor",
+    "ninja",
+	"openssh",
+	"parallel",
     "patch",
     "perl-File-Next",
+	"python", # Python-2!
     "rsync",
-    # needed by Bazel:
-    "python", # Python-2!
+	"subversion",
     "unzip",
+	#"util-linux", # default installed!
     "zip",
     "zlib-devel"
 );
@@ -237,19 +258,13 @@ Function Start_Packing() {
 
     Write-Host "Inspecting package-build environment .."
 
-    # next step is to enable build environment for MSYS2 packages; if a valid local GitHub path 
-    # is provided, use this one; otherwise use current path (default).
-    $msys2_packages_master_src_dir = "$script:msys2_absolute_path\usr\src\MSYS2-packages";
-    $mingw64_packages_master_src_dir = "$script:msys2_absolute_path\usr\src\MINGW-packages";
-    $msys2_keyring_master_src_dir = "$script:msys2_absolute_path\usr\src\MSYS2-keyring";
-
     Import-Module "$Current_Script_loc\msys2-pack.psm1" -ArgumentList @(
         $script:settings.'msys2.packages.master.url',
-        $msys2_packages_master_src_dir,
+        $script:msys2_packages_master_src_dir,
         $script:settings.'msys2.mingw64.packages.master.url',
-        $mingw64_packages_master_src_dir,
+        $script:mingw64_packages_master_src_dir,
         $script:settings.'msys2.keyring.master.url',
-        $msys2_keyring_master_src_dir
+        $script:msys2_keyring_master_src_dir
     )
 
     $packer_load_facts = Get_Packer_Load_Facts;
@@ -311,7 +326,7 @@ Function Loop_Menu() {
     do {
         $prompt = "Please choose an activity:`n";
         $prompt += "`tType 'H' to get some help about this MSYS2 installation.`n";
-        $prompt += "`tType 'B' to bash into the MSYS2 installation with a predefined user account.`n";
+        $prompt += "`tType 'B' to bash into the MSYS2 installation with a predefined user account; you will be asked to confirm administrative privileges.`n";
         if ( $clean_start_required ) {
             $prompt += "`tType 'C' to reload the MSYS2 library in a clean way (and unlock DB if necessary).`n";
         }
@@ -338,17 +353,15 @@ Function Loop_Menu() {
             C {
                 Msys_Sync_Packages;
                 Write-Host "MSYS2 has been reloaded (sync'd)..";
-                $exitWhile = $True;
-                #__reload_script;
+                #$exitWhile = $True; Stay in loop!
             }
             R {
                 Install_Required_Packages | ForEach-Object { Write-Host "Installed $_"; };
-                $exitWhile = $True;
-                #__reload_script;
+                #$exitWhile = $True; Stay in loop!
             }
             Y {
                 Run_Install_Script;
-                # Stay in loop
+                #$exitWhile = $True; Stay in loop!
             }
             P {
                 $retval = Start_Packing;
@@ -358,7 +371,7 @@ Function Loop_Menu() {
                 else {
                     Write-Host "Something unexpected happened..";
                 }
-                #$exitWhile = $True;
+                #$exitWhile = $True; Stay in loop!
             }
             X {
                 Set-Location $Current_Script_loc;

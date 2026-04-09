@@ -41,7 +41,7 @@ my $msys2_install_root = $ARGV[1];
 
 #my $path = Cwd::abs_path();
 my $recipes_path = dirname($yaml_file_path);
-my $path_separator = '\\'; 
+my $path_separator = '/'; 
 
 if($yaml_file_path eq "") {
     print "A path to a 'recipe.yml' file must be provided as the first argument to this script!";
@@ -178,6 +178,11 @@ sub file_op() {
         my $file_ops_hash = $file_hash->{$file_name}; # ..that in turn contain the operations on the files
         for my $file_op_key (%{ $file_ops_hash }) {
             print "OP-Key: $file_op_key\n";
+			if($file_op_key eq 'new_dir') {
+				my $new_dir = $file_ops_hash->{'new_dir'};
+				system("mkdir", "$file_name/$new_dir");
+				return "Created new folder: $new_dir";
+			}
             if($file_op_key eq 'target_dir') {
                 my $target_dir = $file_ops_hash->{'target_dir'};
                 print "Copying $file_name to $target_dir\n";

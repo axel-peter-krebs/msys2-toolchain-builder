@@ -1,5 +1,7 @@
 The source of this script is taken from the website https://gitforwindows.org/install-inside-msys2-proper.html
 
+NOTE: The procedure described herein was deprecated in favor of the 'mingw-w64-git' base package!
+
 NOTE: The script is not running smoothly on a new MSYS2 installation. This comes from the fact, that in a first step a system upgrade is executed
     which, however, downgrades the Perl runner, through which this script is run! It's a chicken-egg-problem and can only be solved through 
     running the script again three times. The error message in the second run is:

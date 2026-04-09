@@ -1,0 +1,72 @@
+---
+  version: 1.0
+
+  arch: mingw64
+
+  msys2-version: ">3.6.5"
+
+  steps:
+    - name: "#1"
+      description: 'Update MSYS2 packages'
+      commands: 
+        - "sh -c 'pacman -Syu --noconfirm'"
+            - name: "#2"
+      description: "Add required dependencies."
+      packages:
+        - "autotools"
+        - "base-devel"
+        - "bash"
+        - "breezy"
+        - "cmake"
+        - "coreutils"
+        - "curl"
+        - "diffutils"
+        - "findutils"
+        - "gawk"
+        - "gcc"
+        - "git"
+        - "gnupg"
+        - "grep"
+        - "gyp"
+        - "jq"
+        - "mercurial"
+        - "openssh"
+        - "parallel"
+        - "rsync"
+        - "sed"
+        - "subversion"
+        - "util-linux"
+        - "mingw-w64-x86_64-bat"
+        - "mingw-w64-x86_64-asciidoctor"
+      commands: 
+        - "sh -c 'pacman -Suu --noconfirm'"
+        
+    - name: "#3"
+      description: "Change makepkg.conf to use a different compression algorithm."
+      files:
+        - "makepkg.conf":
+            target_dir: "/etc/makepkg.conf.d"
+        - "001-windsymlinks.sh":
+            target_dir: "/etc/profile.d"
+        - "ssh-agent.sh":
+            target_dir: "/etc/profile.d"
+
+    - name: "#4"
+      description: "Install development tools (UI)."
+      packages: 
+        - "mingw-w64-x86_64-git"
+        - "mingw-w64-x86_64-git-archimport"
+        - "mingw-w64-x86_64-git-credential-wincred"
+        - "mingw-w64-x86_64-git-cvs"
+        - "mingw-w64-x86_64-git-doc-html"
+        - "mingw-w64-x86_64-git-doc-man"
+        - "mingw-w64-x86_64-git-for-windows-addons"
+        - "mingw-w64-x86_64-git-gui"
+        - "mingw-w64-x86_64-git-p4"
+        - "mingw-w64-x86_64-git-perl"
+        - "mingw-w64-x86_64-git-send-email"
+        - "mingw-w64-x86_64-git-subtree"
+        - "mingw-w64-x86_64-git-svn"
+        - "mingw-w64-x86_64-gitk"
+        - "mingw-w64-x86_64-gitweb"
+        - "mingw-w64-x86_64-cmake-gui"
